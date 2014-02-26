@@ -3,14 +3,13 @@
 package influxdb
 
 import (
-	//"bytes"
 	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 )
 
-// QuerySingle querys and expect a single series as a result
+// QuerySingle runs a query and retuens and expects a single series as a result
 func (c *Client) QuerySingle(query string) (series *Series, err error) {
 
 	result, err := c.Query(query)
@@ -47,10 +46,10 @@ func (s *Series) PtVal(target interface{}, colName string) (err error) {
 	return err
 }
 
-// SeriesMerge creates a merged series from the provided series (merge by "time")
-// All series should be based on the same time base for this to be useful
+// SeriesMerge creates a merged serie from the provided series (merge by "time")
+// All series should be based on the same time interval for this to be useful
 // ColMapping is used to specify which columns we want returned and what to name them.
-// It is indexed the same as the series it refers to.
+// Each ColMapping is applied to the matching series (by index)
 func SeriesMerge(name string, series []*Series, colMapping []map[string]string) *Series {
 	allCols := []string{"time"}
 	merged := Series{
@@ -72,9 +71,10 @@ func SeriesMerge(name string, series []*Series, colMapping []map[string]string) 
 				pt = append(pt, point[index])
 			}
 			time := point[0].(float64)
-			for len(pts[time]) < i { // padding
+			for len(pts[time]) < i { // padding missing values with 0
 				pts[time] = append(pts[time], []interface{}{0.0})
 			}
+			// "Merge" columns of points with same timestamp together
 			pts[time] = append(pts[time], pt...)
 		}
 	}
@@ -82,7 +82,7 @@ func SeriesMerge(name string, series []*Series, colMapping []map[string]string) 
 	for time, vals := range pts {
 		pt := []interface{}{time}
 		pt = append(pt, vals...)
-		for len(pt) < len(allCols) { // padding
+		for len(pt) < len(allCols) { // padding missing values with 0
 			pt = append(pt, 0.0)
 		}
 		merged.Points = append(merged.Points, pt)
