@@ -72,7 +72,7 @@ func SeriesMerge(name string, series []*Series, colMapping []map[string]string) 
 			}
 			time := point[0].(float64)
 			for len(pts[time]) < i { // padding missing values with 0
-				pts[time] = append(pts[time], []interface{}{0.0})
+				pts[time] = append(pts[time], 0.0)
 			}
 			// "Merge" columns of points with same timestamp together
 			pts[time] = append(pts[time], pt...)
