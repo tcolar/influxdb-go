@@ -5,6 +5,7 @@ package influxdb
 import (
 	"errors"
 	"fmt"
+	//"log"
 	"reflect"
 	"strings"
 )
@@ -65,7 +66,15 @@ func SeriesMerge(name string, series []*Series, colMapping []map[string]string) 
 				indexes = append(indexes, index)
 			}
 		}
+		var t float64 = 0.12345
 		for _, point := range s.Points {
+			// temp bug workaround for https://github.com/influxdb/influxdb/issues/321#issuecomment-37207763
+			v := point[0].(float64)
+			if t == v {
+				continue
+			}
+			t = v
+			// end bug
 			pt := []interface{}{}
 			for _, index := range indexes {
 				pt = append(pt, point[index])
